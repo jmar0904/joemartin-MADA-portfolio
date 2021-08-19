@@ -6,5 +6,24 @@ output:
 ---
 
 
-Add some text and a figure describing myself.
+## Joe Martin
+### Assistant Director, Admissions Operations
+#### Full-Time MBA Program, Terry College of Business
 
+### MS in Business Analytics Student
+
+#### About Me
+I graduated from the University of North Carolina at Chapel Hill in 2016. Having studied Philosophy and Journalism, my interests were aligned in media and publishing. Following graduation, I joined a start-up that uses natural language processing to review fiction manuscripts at scale.
+
+I'm currently the Assistant Director of Admissions Operations for Georgia's Full-Time MBA program. I work behind the scenes managing our application system and CRM, building digital resources for our students, and sometimes emerge from my office to help recruit new students. 
+
+In addition to my full-time role in Terry, I'm also pursuing my MS in Business Analytics. I'm primarily interested in process management and mining for data to understand how end-users actually engage with online content. 
+
+I've been working in R for a couple of years now, primarily analyzing data related to our applicants and our office's workflow. Additionally,
+I've completed coursework in SQL and Python. Other than the couple of courses I've completed so far, most of my knowledge in programming and data analysis has been self-taught, so I hope to use this course to better learn principles for data analysis and programming to make me a more efficient data scientist. 
+
+####Running
+I've now completed two marathons and I'm running my third in November 2021. I began distance running in 2012 when I was starting college and and almost always recorded my workouts on my phone or my Garmin watch. As such, I have years-worth of data that I've been working to clean and analyze in R. Data for the last few years lives on my github [@jmar0904](https://github.com/jmar0904), but I'm glad to share further back if anyone can help me clean it :-)
+
+####The Cartoon Guide to Statistics
+I began my MSBA program after about 4 years of full-time work. Although I'm in a highly-quantitative program that includes a lot of statistical work, I've found that I'm a bit rusty in my knowledge of stats and need refreshing. I found this wonderful book book called [The Cartoon Guide to Statistics](https://archive.org/details/TheCartoonGuideToStatistics/mode/2up), which has been much easier to digest than any other stats textbooks I've read. 

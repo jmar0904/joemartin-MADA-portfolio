@@ -7,7 +7,7 @@ output:
     toc: false
 navbar:
   type: inverse
-  title: "Joe Martin"
+  title: "Modern Applied Data Analysis"
   left:
     - text: "About Me"
       href: ./aboutme.html

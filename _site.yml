@@ -9,7 +9,7 @@ navbar:
   type: inverse
   title: "Joe Martin"
   left:
-    - text: 
+    - text: "About Me"
       href: ./aboutme.html
     - text: "Projects"
       menu:
@@ -21,4 +21,5 @@ navbar:
           href: ./tidytuesday.html
   right:
     - icon: fa-github fa-lg
-      href: URL-TO-THIS-REPOSITORY-HERE        
+      href: https://github.com/jmar0904/joemartin-MADA-portfolio
+    - icon: fab fa-linkedin

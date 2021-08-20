@@ -1,4 +1,4 @@
-name: "My Data Analysis Portfolio"
+name: "Modern Applied Data Analysis"
 output_dir: 'docs'
 output:
   html_document:
@@ -7,9 +7,9 @@ output:
     toc: false
 navbar:
   type: inverse
-  title: "My Data Analysis Portfolio"
+  title: "Joe Martin"
   left:
-    - text: "About Me"
+    - text: 
       href: ./aboutme.html
     - text: "Projects"
       menu:

@@ -5,6 +5,8 @@ output:
     theme: cosmo
     highlight: zenburn
     toc: false
+    includes:
+      in_header: 
 navbar:
   type: inverse
   title: "Modern Applied Data Analysis"
@@ -22,5 +24,6 @@ navbar:
   right:
     - icon: fa-github fa-lg
       href: https://github.com/jmar0904/joemartin-MADA-portfolio
+      target: _blank
     - icon: fab fa-linkedin
       href: https://www.linkedin.com/in/joe-martin-0904/

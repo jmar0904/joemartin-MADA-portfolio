@@ -6,7 +6,7 @@ output:
     highlight: zenburn
     toc: false
     includes:
-      in_header: 
+      in_header: jm-favicon.png
 navbar:
   type: inverse
   title: "Modern Applied Data Analysis"

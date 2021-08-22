@@ -1,6 +1,6 @@
 name: "Modern Applied Data Analysis"
 output_dir: 'docs'
-favicon: jm-favicon.png
+favicon: ./jm-favicon.png
 output:
   html_document:
     theme: cosmo

@@ -153,4 +153,34 @@ fit2 <- africadata2k %>%
 fit2
 ```
 
+#additional works done by Ehsan Suez
 
+#Getting data for the country "Algeria" only
+```{r}
+Algeriadata <- filter(gapminder, country=="Algeria")
+AlgPop <- select(Algeriadata, population, life_expectancy)
+AlgGDP <- select(Algeriadata, gdp, life_expectancy)
+summary(AlgPop)
+summary(AlgGDP)
+```
+#plot life expectancy against either population or GDP
+```{r}
+ggplot(AlgPop, aes(x = population, y = life_expectancy)) +
+     geom_point() +
+     xlab("Population") +
+     ylab("Life Expectancy")
+```
+```{r}
+ggplot(AlgGDP, aes(x = gdp, y = life_expectancy)) +
+     geom_point() +
+    xlab("GDP") +
+     ylab("Life Expectancy")
+```
+#Linear model of "life expectancy" as outcome and GDP or Population as predictor
+```{r}
+library("tidyverse")
+fit3 <- lm(population ~ life_expectancy, AlgPop)
+summary(fit3)
+fit4 <- lm(gdp ~ life_expectancy, AlgGDP)
+summary(fit4)
+```

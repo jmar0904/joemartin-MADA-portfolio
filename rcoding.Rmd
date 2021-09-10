@@ -13,8 +13,8 @@ library("dslabs")
 library("tidyverse")
 ```
 
-```{r view_gapminder, eval=FALSE, echo=FALSE}
-gapminder
+```{r view_gapminder}
+#gapminder
 
 # View gampminder help section
 help(gapminder)
@@ -132,26 +132,21 @@ ple_plot2k
 
 ```{r fit1}
 # Line of best fit with infant mortality
-fit1 <- africadata2k %>% 
-  select(year,infant_mortality,life_expectancy) %>%
-  ggplot(aes(x=infant_mortality, y=life_expectancy))+
-  geom_point()+
-  geom_smooth(method="lm")
+fit1 <- lm(life_expectancy ~ infant_mortality, data = africadata2k)
 
 # Run plot
-fit1             
+summary(fit1)
 ```
 
 ```{r fit2}
 # Line of best fit with population
-fit2 <- africadata2k %>%
-  select(year,population,life_expectancy) %>%
-  ggplot(aes(x=log10(population),y=life_expectancy))+
-  geom_point()+
-  geom_smooth(method="lm")
+fit2 <- lm(life_expectancy ~ population, data = africadata2k)
 
-fit2
+summary(fit2)
 ```
+### Conclusion
+##### Based on the p-values for fit 1, we can conclude that the relationship between life expectancy and infant mortality is statistically significant (p-value 2.826x10^-8). In fit 2, we can conclude that there is no significant relationship between population and life expectancy. 
+
 
 #additional works done by Ehsan Suez
 

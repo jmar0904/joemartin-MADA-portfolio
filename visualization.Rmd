@@ -61,7 +61,7 @@ l_test_plot <- scr %>% ggplot(aes(x=loserscore))+
 l_test_plot
 ```
 
-By eliminating those scores, I ended up with a two graphs that look a lot nicer. At this stage, I also figured out that it would be easier use pivot_longer in my dataset to create one variable "score" and a variable with "winnerscore" and "loserscore" as values. This follows tidy data format and will allow me to set my x value equal to score and color equal to "status" (winnerscore/loserscore). At this stage, knowing I only need the variables for score, I selected gameid, winnerscore, and loserscore to simplify the dataset for my plot.
+By eliminating those scores, I ended up with two graphs that look a lot nicer. At this stage, I also figured out that it would be easier use pivot_longer in my dataset to create one variable "score" and a variable with "winnerscore" and "loserscore" as values. This follows tidy data format and will allow me to set my x value equal to score and color equal to "status" (winnerscore/loserscore). At this stage, knowing I only need the variables for score, I selected gameid, winnerscore, and loserscore to simplify the dataset for my plot.
 
 ```{r}
 # 700,000 games of scrabble graph

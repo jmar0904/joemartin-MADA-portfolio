@@ -1,3 +1,2 @@
-# Joe Martin's website for MADA class
+#### This is the GitHub for my <a href="https://jmar0904.github.io/joemartin-MADA-portfolio/" target="_blank">MADA course portfolio</a>.
 
-# 8/19/2021 - updated index page with random text and placeholder text to check if I can change content. Updated aboutme page with personalized content. 

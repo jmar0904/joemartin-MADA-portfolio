@@ -1,8 +1,8 @@
 ---
-title: "Module 11 Exercise"
-author: "Joe Martin"
-date: "10/31/2021"
-output: html_document
+title: "Analysis of University Health Center Patients"
+output: 
+  html_document:
+    toc: FALSE
 ---
 <em>This is the final analysis in a series of three. To view previous analyses leading to this one, please visit <a href="https://github.com/jmar0904/joemartin-MADA-analysis3/tree/master/code/analysis_code">my GitHub repository</a>.</em>
 

@@ -1,0 +1,134 @@
+---
+title: "Model Fitting Part 1"
+author: "Joe Martin"
+date: "10/14/2021"
+output: pdf_document
+---
+
+```{r load, echo=FALSE, warning=FALSE, message=FALSE,error=FALSE}
+pacman::p_load(pacman,tidyverse, here, readr, broom.mixed, dotwhisker)
+
+library(tidymodels)
+
+data <- here::here("data","processed_data","processeddata.rds")
+df <- read_rds(data)
+```
+
+## Introduction
+
+Presence of Runny Nose is the main predictor variable. Body Temperature is the main continuous variable. Nausea is the main categorical variable. 
+
+To begin modeling the RunnyNose variable, I'm adding the boxplot and regression read-out from my exploration:
+``` {r sneeze_boxplot}
+rn_boxplot <- df %>% ggplot(aes(x=BodyTemp, y = RunnyNose))+
+  geom_violin()+
+  geom_boxplot(width = .2)+
+  theme_bw()
+rn_boxplot
+```
+
+p-value of .00268
+```{r temp_sneeze}
+temp_sneeze <- lm(BodyTemp ~ RunnyNose, data = df)
+summary(temp_sneeze)
+```
+
+## Models
+
+### Linear Regression
+
+I'll begin running this as a linear regression. This is not the preferred regression to use here because the variable of interest is categorical. However, this will provide an approximate estimate of probability. The code below generates summary stats for this regression. 
+
+```{r}
+# Fits a linear model to the continuous outcome using only the main predictor of interest.
+lm_mod <- linear_reg() %>%
+  set_engine("lm")
+
+lm_fit <- lm_mod %>%
+  fit(BodyTemp ~ RunnyNose, data = df)
+
+lm_fit
+
+tidy(lm_fit)
+
+```
+
+Now I'll model all variables with BodyTemp. I can review these results and compare models for each variable with summary stats, as well as a dot-and-whisker plot.  
+
+```{r}
+# Fits another linear model to the continuous outcome using all (important) predictors of interest.
+lm_fit_more <- 
+  lm_mod %>%
+  fit(BodyTemp ~ ., data = df)
+
+lm_fit_more
+
+tidy(lm_fit_more)
+
+tidy(lm_fit_more) %>%
+  dwplot(dot_args = list(size = 2, color = "red"),
+         whisker_args = list(color = "black"),
+         vline = geom_vline(xintercept = 0, color = "grey50", linetype = 2))
+
+```
+
+Next, use the glance function to compare the output between the target variable (RunnyNose) and all other variables. Comparing p-values, it is clear that using all variables is a more robust way to predict body temperature.
+
+```{r}
+# Compares the model results for the model with just the main predictor and all predictors.
+glance(lm_fit)
+```
+
+```{r}
+glance(lm_fit_more)
+```
+
+### Logistic Regression
+
+This logistic regression model will test the relationship between Nausea, the main outcome of interest, and Runny Nose, the predictor of interest.
+
+```{r}
+# Fits a logistic model to the categorical outcome using only the main predictor of interest.
+log_mod <- logistic_reg() %>%
+  set_engine("glm")
+
+log_fit <- 
+  log_mod %>%
+  fit(Nausea ~ RunnyNose, data = df)
+```
+
+```{r}
+log_fit
+```
+
+```{r}
+tidy(log_fit)
+```
+
+The p-value in this logistic regression is .77, so this isn't a significant relationship.
+
+Finally, I'll compare the target variable, Nausea, with the other variables of interest.
+
+```{r}
+# Fits another logistic model to the categorical outcome using all (important) predictors of interest.
+log_fit_more <- 
+  log_mod %>%
+  fit(Nausea ~ ., data = df)
+
+tidy(log_fit_more)
+```
+
+```{r}
+tidy(log_fit_more) %>%
+  dwplot(dot_args = list(size = 2, color = "red"),
+         whisker_args = list(color = "black"),
+         vline = geom_vline(xintercept = 0, color = "grey50", linetype = 2))
+
+```
+```{r}
+glance(log_fit)
+```
+
+```{r}
+glance(log_fit_more)
+```

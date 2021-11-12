@@ -22,9 +22,12 @@ navbar:
           href: ./tidytuesday.html
         - text: "Tidy Tuesday 2 Exercise"
           href: ./tidytuesday_exercise2.html
+        - text: "Analysis of University Health Center Patients"  
+          href: ./files/model_fitting_part_3.html
   right:
     - icon: fa-github fa-lg
       href: https://github.com/jmar0904/joemartin-MADA-portfolio
       target: _blank
     - icon: fab fa-linkedin
       href: https://www.linkedin.com/in/joe-martin-0904/
+      target: _blank

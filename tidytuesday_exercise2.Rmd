@@ -1,168 +1,361 @@
 ---
-to be filled
+title: "Tidy Tuesday 2"
+output: 
+  html_document:
+    toc: FALSE
 ---
-### Week 40
-#### Papers from the National Bureau of Economic Research (NBER)
+### Marble Racing
+#### Tidy Tuesday - June 2, 2020
 
+In the early days of the pandemic when professional sports leagues stopped play to slow the spread of COVID-19, Marble Racing became temporary replacement, earning Jon Oliver's endorsement on <em>Last Week Tonight</em>. While I'm sure there isn't big money to be earned gambling on marble races, <strong>I think it would be possible to predict race outcomes strictly based on qualifying performance. To play it safe, I would likely bet on whether a marble gets first, second, or third place, so the target variable will be top_3 (yes or no).</strong>
+
+Before beginning this exercise, one limitation I with this data set are the number of features and the number of observations. Additionally, some features will have to be dropped to prevent data leakage. For example, I don't want to include the place each marble finished in a race as a predictor of whether it finished in the Top 3. 
+
+In this Tidy Tuesday project, I'm going to wrangle the marble data set to include final place, explore the data to see if there is a trend, and build four models in an effort to find the best fit. 
 ```{r echo = FALSE}
 # Load clean data from nberwp-master directory
-pacman::p_load(pacman,tidyverse, lubridate, ggtext)
+pacman::p_load(pacman, tidyverse, here, lubridate, ggtext, gganimate)
 
-load(file = "~/data/GitHub/joemartin-MADA-portfolio/nberwp-master/data/authors.rda")
-load(file = "~/data/GitHub/joemartin-MADA-portfolio/nberwp-master/data/paper_authors.rda")
-load(file = "~/data/GitHub/joemartin-MADA-portfolio/nberwp-master/data/paper_programs.rda")
-load(file = "~/data/GitHub/joemartin-MADA-portfolio/nberwp-master/data/papers.rda")
-load(file = "~/data/GitHub/joemartin-MADA-portfolio/nberwp-master/data/programs.rda")
+read_file <- here::here("data","marbles","marbles.csv")
+marbles <- read_csv(read_file)
 ```
 
 ```{r echo = FALSE, eval=FALSE}
-# I'll start by taking a look at each table. I wonder how these tables relate, if there is a single unique identifier they all share.
+glimpse(marbles)
 
-head(authors)
-head(paper_authors)
-head(paper_programs)
-head(papers)
-head(programs)
+#transform data into the right type
+marbles$date <- dmy(marbles$date)
+marbles$race <- as.factor(marbles$race)
+marbles$site <- as.factor(marbles$site)
+marbles$marble_name <- as.factor(trimws(marbles$marble_name))
+marbles$team_name <- as.factor(marbles$team_name)
+marbles$pole <- as.factor(marbles$pole)
+marbles$host <- as.factor(marbles$host)
+
+#drop source and notes variables
+marbles <- marbles %>% select(-source,-notes)
+
+summary(marbles)
 ```
 
-Five datasets are included in this Tidy Tuesday exercise: <em>papers, authors, programs, paper_authors,</em> and <em>paper_programs.</em> These datasets describe papers published by NBER starting in 1973 through 2021.
-
-Looking through these datasets, I'm most immediately interested in finding the most prolific NBER authors and the popularity of topics over time. 
-
-I'll start with a full-join between <em>paper_authors</em> and <em>papers</em> in order to see if there are any NAs. Then I'll join this new table (called attribution) to authors to have a table with author names and publications (called complete_attr). Finally, I'll add a complete date with format MM/YYYY so I can test which individual months had the highest research output.
+Let's learn more about the marble league. Which are the highest-performing marbles? Teams? What are the tracks like?
+```{r}
+marble_points <- marbles %>%
+  select(marble_name,team_name,points) %>%
+  drop_na(points) %>%
+  group_by(marble_name) %>%
+  summarise(team_name,
+            total = sum(points)) %>%
+  arrange(desc(total)) %>%
+  unique()
+rmarkdown::paged_table(marble_points) 
+```
 
 ```{r}
-attribution <- full_join(paper_authors, papers, by = "paper")
-
-complete_attr <- full_join(attribution, authors, by = "author")
-
-complete_attr$date <- paste(complete_attr$month, complete_attr$year, sep = "/")
-complete_attr$date <- my(complete_attr$date)
+team_points <- marbles %>%
+  select(team_name,points) %>%
+  drop_na(points) %>%
+  group_by(team_name) %>%
+  summarise(total = sum(points)) %>%
+  arrange(desc(total))
+rmarkdown::paged_table(team_points)
 ```
 
-#### Most Published Authors
+How fast is each track? 
 ```{r}
-complete_attr$author <- as.factor(complete_attr$author)
-
-most_pubs <- complete_attr %>% select(author, name) %>% count(author, name) %>% group_by(author,name) %>% arrange(desc(n))
-
-rmarkdown::paged_table(most_pubs)
-```
-
-Joshua Aizenman had 191 publications! Quite a few more than the next closest authors. I wonder what this would look like as a distribution.
-
-
-#### Popular Topics
-
-```{r}
-# create dataframe by joining paper_program and programs
-
-popular_topic <- full_join(paper_programs, programs, by = "program")
-
-#most popular program description
-prog_descrip <- popular_topic %>% group_by(program_desc) %>% count() %>% arrange(desc(n))
-prog_descrip <- prog_descrip %>% rename("papers" = n)
-
-#most popular program category
-prog_cat <- popular_topic %>% group_by(program_category) %>% count() %>% arrange(desc(n))
-prog_cat <- prog_cat %>% rename("papers" = n)
-
-#test <- topic_time %>% drop_na(program) %>% select(paper,date,program_category,program_desc)
-
-rmarkdown::paged_table(prog_descrip)
-
-rmarkdown::paged_table(prog_cat)
-
-```
-
-Finally, let's plot!
-
-Which topics are most popular over time? 
-
-```{r fig.height = 10, fig.width = 10}
-#join complete_attr with popular_topic. Use a geom_point in ggplot with different colors for different topics
-# papers are counted more than once here. We're looking at publication topics first though, so I'll leave as is and then change so we can see unique papers
-topic_time <- left_join(papers, popular_topic, by = "paper")
-
-topic_time$date <- paste(topic_time$month, topic_time$year, sep = "/")
-topic_time$date <- my(topic_time$date)
-topic_time$year <- lubridate::year(topic_time$date)
-
-test <- topic_time %>% 
-  select(date,program_desc, program_category) %>% 
-  count(date, program_desc, program_category, sort=TRUE) %>% 
-  drop_na()
-
-# This plot needs to be rescales, but it's very interesting to see the color shift by topic over time. Look at Macro becoming poular during recession periods
-
-plot1 <- topic_time %>% 
-  select(date,program_desc, program_category, year) %>% 
-  count(date, program_desc, program_category, year, sort=TRUE) %>% 
+tracks <- marbles %>%
+  select(site,track_length_m,avg_time_lap) %>%
   drop_na() %>%
-  ggplot(aes(x = factor(year), y = n, fill = program_category))+
-  geom_bar(stat = 'identity')+
-  facet_wrap(~program_desc, nrow = 5) +
-  theme(axis.ticks.x = element_blank(),
-        axis.text.x = element_blank(),
-        legend.title = element_blank(),
-        legend.position = "top",
-        legend.key = element_rect(),
-        legend.key.size = (unit(0.02, "npc")),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "#FFFFFF"))+
-  labs(title = "Popularity of topics in NBER paper topics", subtitle = "1973 - 2021", x = NULL, y = NULL)
-
-plot1
-
+  group_by(site) %>%
+  summarize(Length = track_length_m,
+            `Average Speed (seconds)` = mean(avg_time_lap)) %>%
+  arrange(desc(`Average Speed (seconds)`)) %>%
+  unique()
+rmarkdown::paged_table(tracks)  
 ```
-
-Another way to show popularity of paper topics over time:
 
 ```{r}
-plot3 <- topic_time %>% drop_na(program) %>% 
-  ggplot(aes(x = date, y = program_desc, color = program_category))+
-  geom_boxplot()+
-  theme(legend.title = element_blank(),
-        panel.grid.major = element_line(color = "#e6e6e6"),
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "#FFFFFF", color = "black"))+
-  labs(title = "Popularity of topics in NBER paper topics", subtitle = "1973 - 2021", x = NULL, y = NULL)
+race_results <- # dataframe to see race results only
+  marbles %>% drop_na(points)
 
-plot3
+#create a variable for finishing place
+place <- rep(1:16,8)
+race_results$place <- place
 
+qualifiers <- marbles %>% filter(grepl("Q",marbles$race)) #dataframe to see qualifier results only
+qualifiers$place <- qualifiers$pole #add pole place to the place variable
+qualifiers$place <- as.numeric(str_remove(qualifiers$place,"P"))
+
+marbles2 <- bind_rows(race_results, qualifiers) # put tables together to have one variable for the final place
+marbles2$type <- ifelse(grepl("Q",marbles2$race),"qualifier","race") # create a variable that indicates if it's a qualifier or a race
+marbles2$race <- as.character(marbles2$race)
+marbles2$event <- substr(marbles2$race,4,4)
 ```
-
-How often do authors publish with NBER?
 
 ```{r}
-josh <- most_pubs %>% filter(author == "w0748.2")
+marbles_race <- marbles2 %>% filter(type == "race") %>%
+  select(-date,-race,-pole,-points, -type)#trying to get one variable with the qualifying time, qualifying place, race time, race place
+marbles_qual <- marbles2 %>% filter(type == "qualifier")%>%
+  select(-date,-race,-pole,-points, -type)
 
-distribution <- most_pubs %>% 
-  ggplot(aes(x = factor(n), y = n))+
-  geom_bar(stat = "identity", fill = "#619CFF")+
-  theme(axis.ticks.x = element_blank(),
-        axis.text.x = element_blank(),
-        panel.grid.major.y = element_line(linetype = "dashed", color = "black"),
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "#FFFFFF"))+
-  geom_bar(data=josh, stat = "identity",
-           aes(x=factor(n), y=n),
-           fill = "#F8766D")+
-  geom_text(x = 2, y = -200,
-            label = "0")+
-  geom_text(x = 60, y = -200,
-            label = "60")+
-  geom_text(x = 100, y = -200,
-            label = "120")+
-  geom_text(aes(x=92, y = 1500, label = "Joshua Aizenman, 191 Papers"))+
-  geom_segment(x = 110, xend = 113,
-               y = 1000, yend = 250,
-               size = 1, color = "#BA0C2F", 
-               arrow = arrow(length = unit(0.02, "npc"),
-                           type = "closed"))+
-  labs(title = "Distribution of Publications", subtitle = "How many papers do authors publish in NBER?", x = "Papers", y = "Authors" )
+marbles_race <- marbles_race %>% rename("race_place" = place)
+marbles_race <- marbles_race %>% rename("race_time" = time_s)
+marbles_race <- marbles_race %>% rename("race_laps" = number_laps)
 
-distribution
+marbles_qual <- marbles_qual %>% rename("qual_place" = place)
+marbles_qual <- marbles_qual %>% rename("qual_time" = time_s)
+marbles_qual <- marbles_qual %>% rename("qual_laps" = number_laps)
+marbles_qual <- marbles_qual %>% select(event,marble_name, qual_time, qual_place, qual_laps)
+
+# join on event and marble name
+marbles3 <- full_join(marbles_race,marbles_qual, by = c("event", "marble_name")) # this dataset will enable me to use qualifying place as a variable for each corresponding race
+
+# race_place should be a factor to fit into a logistic model
+marbles3$race_place <- as.factor(marbles3$race_place)
+marbles3$top_3 <- as.factor(ifelse(marbles3$race_place == 1 |marbles3$race_place == 2 | marbles3$race_place == 3,
+                         1,0))
+gg_marb <- marbles3
+gg_marb$top_3 <- as.numeric(gg_marb$top_3)
+
+m4 <- marbles3 %>% select(-race_place,-race_time,-avg_time_lap, -event, -qual_laps) #get rid of variables that would cause data leak and variables that aren't relavent to prediction. 
+```
+
+Looking at the top finishers for each event, it's unlikely for the winner of each qualifying event to win the corresponding race. However, it is possible that 
+```{r}
+marbles2 %>%
+  filter(place == 1)%>%
+  ggplot(aes(x=event,y=type, label=marble_name))+
+  geom_point()+
+  geom_label(aes(fill = team_name))+
+  labs(title = "Are top qualifiers most likely to win?", 
+       subtitle = "Top finishers for each qualifier and race",
+       x = "Race",
+       y = "")+
+  theme_classic()+
+  theme(legend.position = "none")
+```
+
+How did individual teammate performances compare? Looking at this graphic helps to show roughly which individual marbles finish consistently high and which finish consistently low.
+```{r}
+# inspiration from @joepope44 https://twitter.com/joepope44/status/1268727311450472448
+marble_points %>%
+  ggplot(aes(x=total, y=team_name, label = marble_name))+ # try sorting y axis based on season performance
+  geom_point() +
+  geom_line() +
+  geom_label(aes(fill = team_name))+
+  labs(title = "Team Performance", 
+       subtitle = "Individual team contribution to team points",
+       x = "Points", y = "Team")+
+  theme_classic()+
+  theme(legend.position = "none")
+```
+
+Who has the most top 3 finishes? Looks like Snowy, Speedy, Smoggy, Rapidly, Orangin, and Hazy have the greatest number of top 3 finishes. 
+```{r}
+gg_marb %>% ggplot(aes(x = marble_name, y = top_3))+
+  geom_col()+
+  coord_flip()+
+  theme_classic()+
+  labs(title = "Top 3 Finishes", 
+       subtitle = "How many top 3 finishes has each marble achieved",
+       x = "Top 3 Finishes", y = "Marble")
+```
+
+
+```{r}
+# Start building a model
+p_load(tidymodels)
+
+set.seed(123)
+
+data_split <- initial_split(m4, prop = 3/4)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+
+m_rec <- recipe(top_3 ~ ., data = train_data)%>%
+  step_dummy(all_nominal_predictors())
+```
+
+```{r}
+lr_mod <- 
+  logistic_reg() %>%
+  set_engine("glm")
+
+m_wf <- workflow() %>%
+  add_model(lr_mod) %>%
+  add_recipe(m_rec)
+
+m_fit <- 
+  m_wf %>%
+  fit(data = train_data)
+
+tidy(m_fit) #will throw a warning
+```
+
+```{r warning = FALSE}
+predict(m_fit,test_data) #will throw a warning
+
+m_aug <- augment(m_fit,test_data)
+
+m_aug %>%
+  select(qual_place,top_3,.pred_class)
+
+m_aug$.pred_class <- as.numeric(m_aug$.pred_class,event_level= "second")
+```
+
+```{r warning = FALSE}
+m_aug %>%
+  roc_curve(truth = top_3, .pred_class, event_level= "second") %>%
+  autoplot()
+
+m_aug %>% roc_auc(truth = top_3, .pred_class, event_level = "second")
+```
+
+This model does not quite predict results very well, however, it did to better than I hoped. Next, I'll try to see how it does with retraining. A LASSO or ridge regression model is probably going to be my final choice because there are fewer features in this data set. I'll start with a decision tree and then I'll try a random forest. I'll continue to use the same data split and recipe. 
+
+```{r warning = FALSE, error = FALSE, message= FALSE}
+folds <- vfold_cv(train_data, v = 5, repeats = 5, strata = top_3)
+
+tree_grid <- grid_regular(cost_complexity(),
+                          tree_depth(),
+                          levels = 5)
+
+mtree_wf <- workflow() %>%
+  add_model(lr_mod) %>%
+  add_recipe(m_rec)
+
+m_tree_res <- mtree_wf %>%
+  tune_grid(resamples = folds,
+            grid = tree_grid)
+
+m_tree_res %>%
+  collect_metrics()
+
+m_tree_res %>%
+  show_best("roc_auc", event_level = "second")
+
+# select best roc_auc
+best_model <- m_tree_res %>%
+  select_best("roc_auc")
+
+final_wf <- mtree_wf %>%
+  finalize_workflow(best_model)
+
+final_fit <- final_wf %>%
+  last_fit(data_split)
+
+final_fit[[5]][[1]]$.pred_class <- as.numeric(final_fit[[5]][[1]]$.pred_class)
+
+final_fit %>%
+  collect_predictions() %>% 
+  roc_curve(top_3, .pred_class, event_level="second") %>% 
+  autoplot()
+
+final_fit %>%
+  collect_predictions() %>%
+  roc_auc(top_3, .pred_class, event_level = "second")
+```
+
+The tree model has the same roc_auc value as the previous model. Next, I'll try a random forest to see if I can improve the accuracy. 
+
+```{r warning = FALSE}
+# this section uses the same data split and vfold cross-validation as the previous models
+val_set <- validation_split(train_data,
+                            strata = top_3,
+                            prop = 8/10)
+
+cores <- parallel::detectCores()
+
+rf_marb <- rand_forest(mtry = tune(), min_n = tune(), trees = 1000) %>%
+  set_engine("ranger", num.threads = cores) %>%
+  set_mode("classification")
+
+rf_marb_wf <- workflow() %>%
+  add_model(rf_marb) %>%
+  add_recipe(m_rec)
+```
+
+```{r r17, warning = FALSE, error = FALSE, message= FALSE}
+#tune grid
+rf_res <- rf_marb_wf %>%
+  tune_grid(val_set,
+  grid = 25,
+  control = control_grid(save_pred = TRUE),
+  metrics = metric_set(roc_auc))
+```
+
+The two sections below are temporarily hidden. It worked fine in R Studio, but did not knit. 
+```{r warning = FALSE}
+#rf_best <- rf_res %>%
+  #select_best(metric = "roc_auc")
+#rf_best
+
+#rf_auc <- 
+# rf_res %>% 
+ #collect_predictions(parameters = rf_best) %>% 
+  #roc_curve(top_3, .pred_1) %>% 
+  #mutate(model = "Random Forest")
+
+#rf_auc
+```
+
+Looking at the results from the random forest, it seems that this was not a good model. In fact, the performance of the previous models seems to be better. 
+
+```{r warning = FALSE}
+#rf_auc %>%
+#ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) +
+ # geom_path() +
+  #geom_abline() + 
+  #coord_equal()
+```
+
+At the beginning of this page, I addressed the fact that there is very little data here. Considering I'm trying to use qualification data to predict race outcomes, there are only 128 observations. Thinking about this problem, I though that a ridge regression model might improve performance a bit. 
+
+```{r warning = FALSE, error = FALSE, message= FALSE}
+# using the same data split from earlier
+r_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30))
+
+ridge_reg <- logistic_reg(
+  mode = "classification",
+  engine = "glm",
+  mixture = 0) #setting mixture to 0 indicates a ridge regression is being used
+
+r_wf <- 
+  workflow() %>%
+  add_model(ridge_reg) %>%
+  add_recipe(m_rec)
+
+r_res <- # this will throw a warning saying there are no tuning parameters
+  r_wf %>%
+  tune_grid(folds,
+            grid = r_grid,
+            control = control_grid(save_pred = TRUE),
+            metrics = metric_set(roc_auc))
+```
+
+```{r warning = FALSE}
+r_res %>%
+  show_best("roc_auc", event_level = "second")
+
+# select best
+r_best <- r_res %>%
+  select_best("roc_auc", event_level = "second")
+r_best
+
+# finalize workflow
+final_r_wf <- 
+  r_wf %>% 
+  finalize_workflow(r_best)
+
+# final fit with split data
+final_r_fit <- final_r_wf %>%
+  last_fit(data_split)
+
+final_r_fit %>%
+  collect_metrics()
 
 ```
+
+In conclusion, ridge regression was the best predictor of all the models used. However, with a ROC-AUC value of just .45 and an accuracy of 62%, it still isn't strong enough of a model to be useful in predicting the top three finishers in the marble races. At least, this isn't something I would rely on if I were putting money on these races. 
+
+More than anything else, this model would be strengthened by a greater number of observations and perhaps a greater number of variables. With just 128 observations and 8 predictor variables, it is difficult to get accurate results. 
